@@ -1,9 +1,0 @@
-{
-	"id": "sYGpiMCxvHxx3Qj",
-	"json": "{\"id\":\"sYGpiMCxvHxx3Qj\",\"url\":\"https://www.youtube.com/@mkbhd/shorts\",\"loadedUrl\":\"https://www.youtube.com/@mkbhd/shorts\",\"uniqueKey\":\"https://www.youtube.com/@mkbhd/shorts\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"type\":\"SHORTS\",\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-05-21T11:45:08.386Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://www.youtube.com/@mkbhd/shorts",
-	"url": "https://www.youtube.com/@mkbhd/shorts"
-}

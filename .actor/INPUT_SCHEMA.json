@@ -39,6 +39,12 @@
       "description": "Only scrape videos with at least this many views.",
       "default": 0
     },
+    "fetchLikes": {
+      "title": "Fetch Like Counts (Slower)",
+      "type": "boolean",
+      "description": "If enabled, the scraper will visit each video page individually to fetch like counts. WARNING: This will significantly increase scraping time and consume more Apify credits.",
+      "default": false
+    },
     "minLikes": {
       "title": "Minimum Likes",
       "type": "integer",

@@ -1,6 +1,7 @@
 {
     "channelUrls": ["https://www.youtube.com/@mkbhd"],
-    "videoType": "ALL",
+    "videoType": "LONG_FORM",
     "minViews": 1000000,
-    "maxItemsPerChannel": 5
+    "fetchLikes": true,
+    "maxItemsPerChannel": 2
 }
