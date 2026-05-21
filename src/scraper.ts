@@ -1,4 +1,4 @@
-import { Innertube, UniversalCache } from 'youtubei.js';
+import { HttpCrawler } from 'crawlee';
 import { log } from 'apify';
 
 export interface ScrapeOptions {
@@ -28,7 +28,6 @@ function parseViewCount(viewText?: string): number {
     const match = viewText.match(/[\d,.]+/);
     if (!match) return 0;
     
-    // Sometimes it's like 1.2M views or something, but usually youtubei.js provides raw view_count in another field, or exact string like "1,234 views"
     const numStr = match[0].replace(/,/g, '');
     let mult = 1;
     if (viewText.toLowerCase().includes('k')) mult = 1000;
@@ -39,131 +38,115 @@ function parseViewCount(viewText?: string): number {
 }
 
 export class YouTubeScraper {
-    private yt!: Innertube;
-
     async init() {
-        this.yt = await Innertube.create({ cache: new UniversalCache(false) });
+        // Initialization if needed
     }
 
     async getChannelId(url: string): Promise<string | null> {
-        try {
-            const resolved = await this.yt.resolveURL(url);
-            if (resolved && resolved.payload && resolved.payload.browseId) {
-                return resolved.payload.browseId;
-            }
-            log.warning(`Could not resolve channel URL: ${url}`);
-            return null;
-        } catch (error: any) {
-            log.error(`Error resolving channel URL ${url}: ${error.message}`);
-            return null;
-        }
-    }
-
-    private parseVideoData(video: any, channelName: string, channelUrl: string, type: "LONG_FORM" | "SHORTS"): VideoData {
-        const title = video.title?.text || video.title || "";
-        const videoId = video.id || video.video_id;
-        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        
-        let viewCount = 0;
-        if (typeof video.view_count === 'number') {
-            viewCount = video.view_count;
-        } else if (video.view_count?.text) {
-            viewCount = parseViewCount(video.view_count.text);
-        } else if (video.views) {
-            viewCount = parseViewCount(video.views);
-        }
-
-        const uploadDateText = video.published?.text || video.published_time_text?.text || "";
-        const durationText = video.duration?.text || "";
-
-        return {
-            channelName,
-            channelUrl,
-            videoId,
-            videoUrl,
-            title,
-            type,
-            uploadDateText,
-            viewCount,
-            durationText
-        };
+        return url; // We just use the URL directly with HttpCrawler
     }
 
     async scrapeChannel(channelId: string, channelUrl: string, options: ScrapeOptions, pushData: (data: any) => Promise<void>) {
-        const channel = await this.yt.getChannel(channelId);
-        const channelName = channel.title || "Unknown Channel";
-        log.info(`Scraping channel: ${channelName} (${channelId})`);
-
-        let totalPushed = 0;
-        const maxItems = options.maxItemsPerChannel || Infinity;
-        const maxItemsActive = maxItems > 0;
-        
-        const minViews = options.minViews || 0;
-
-        // Scrape Long Form
+        const urlsToScrape = [];
         if (options.videoType === "ALL" || options.videoType === "LONG_FORM") {
-            try {
-                let feed: any = await channel.getVideos();
-                let keepGoing = true;
-
-                while (keepGoing && feed.videos.length > 0) {
-                    for (const v of feed.videos) {
-                        if (maxItemsActive && totalPushed >= maxItems) {
-                            keepGoing = false;
-                            break;
-                        }
-
-                        const data = this.parseVideoData(v, channelName, channelUrl, "LONG_FORM");
-                        
-                        if (data.viewCount >= minViews) {
-                            await pushData(data);
-                            totalPushed++;
-                        }
-                    }
-
-                    if (keepGoing && feed.has_continuation) {
-                        feed = await feed.getContinuation();
-                    } else {
-                        keepGoing = false;
-                    }
-                }
-            } catch (error: any) {
-                log.warning(`Could not get long-form videos for ${channelName}: ${error.message}`);
-            }
+            urlsToScrape.push({ url: `${channelUrl}/videos`, type: "LONG_FORM" });
         }
-
-        // Scrape Shorts
         if (options.videoType === "ALL" || options.videoType === "SHORTS") {
-            try {
-                let feed: any = await channel.getShorts();
-                let keepGoing = true;
-
-                while (keepGoing && feed.videos.length > 0) {
-                    for (const v of feed.videos) {
-                        if (maxItemsActive && totalPushed >= maxItems) {
-                            keepGoing = false;
-                            break;
-                        }
-
-                        const data = this.parseVideoData(v, channelName, channelUrl, "SHORTS");
-                        
-                        if (data.viewCount >= minViews) {
-                            await pushData(data);
-                            totalPushed++;
-                        }
-                    }
-
-                    if (keepGoing && feed.has_continuation) {
-                        feed = await feed.getContinuation();
-                    } else {
-                        keepGoing = false;
-                    }
-                }
-            } catch (error: any) {
-                log.warning(`Could not get shorts for ${channelName}: ${error.message}`);
-            }
+            urlsToScrape.push({ url: `${channelUrl}/shorts`, type: "SHORTS" });
         }
-        
-        log.info(`Finished scraping ${channelName}. Total items: ${totalPushed}`);
+
+        const maxItems = options.maxItemsPerChannel || Infinity;
+        let totalPushed = 0;
+
+        const crawler = new HttpCrawler({
+            requestHandler: async ({ request, body }) => {
+                const type = request.userData.type as "LONG_FORM" | "SHORTS";
+                const html = body.toString();
+                const match = html.match(/var ytInitialData = (\{.*?\});<\/script>/);
+                if (!match || !match[1]) {
+                    log.warning(`Could not find ytInitialData for ${request.url}`);
+                    return;
+                }
+
+                const data = JSON.parse(match[1]);
+                let channelName = "Unknown Channel";
+                if (data.metadata?.channelMetadataRenderer?.title) {
+                    channelName = data.metadata.channelMetadataRenderer.title;
+                } else if (data.header?.pageHeaderRenderer?.pageTitle) {
+                    channelName = data.header.pageHeaderRenderer.pageTitle;
+                }
+
+                log.info(`Scraping ${type} for channel: ${channelName}`);
+
+                const tabs = data.contents?.twoColumnBrowseResultsRenderer?.tabs;
+                if (!tabs) return;
+
+                const targetTab = tabs.find((t: any) => t.tabRenderer?.selected);
+                if (!targetTab) return;
+
+                const items = targetTab.tabRenderer.content?.richGridRenderer?.contents;
+                if (!items) return;
+
+                for (const item of items) {
+                    if (totalPushed >= maxItems) break;
+
+                    let videoObj = item.richItemRenderer?.content?.videoRenderer;
+                    let lockupObj = item.richItemRenderer?.content?.lockupViewModel;
+
+                    let title = "";
+                    let videoId = "";
+                    let viewsText = "";
+                    let dateText = "";
+                    let durationText = "";
+
+                    if (videoObj) {
+                        title = videoObj.title?.runs?.[0]?.text || "";
+                        videoId = videoObj.videoId;
+                        viewsText = videoObj.viewCountText?.simpleText || "";
+                        dateText = videoObj.publishedTimeText?.simpleText || "";
+                        durationText = videoObj.lengthText?.simpleText || "";
+                    } else if (lockupObj) {
+                        const meta = lockupObj.metadata?.lockupMetadataViewModel;
+                        title = meta?.title?.content || "";
+                        videoId = lockupObj.contentId;
+                        const metaRows = meta?.metadata?.contentMetadataViewModel?.metadataRows || [];
+                        if (metaRows.length > 0 && metaRows[0].metadataParts) {
+                            viewsText = metaRows[0].metadataParts[0]?.text?.content || "";
+                            if (metaRows[0].metadataParts.length > 1) {
+                                dateText = metaRows[0].metadataParts[1]?.text?.content || "";
+                            }
+                        }
+                    } else {
+                        continue; // Maybe a shelf or different type
+                    }
+
+                    if (!videoId) continue;
+
+                    const viewCount = parseViewCount(viewsText);
+                    
+                    if (options.minViews && viewCount < options.minViews) {
+                        continue;
+                    }
+
+                    const videoData: VideoData = {
+                        channelName,
+                        channelUrl,
+                        videoId,
+                        videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+                        title,
+                        type,
+                        uploadDateText: dateText,
+                        viewCount,
+                        durationText
+                    };
+
+                    await pushData(videoData);
+                    totalPushed++;
+                }
+            }
+        });
+
+        await crawler.run(urlsToScrape.map(u => ({ url: u.url, userData: { type: u.type } })));
+        log.info(`Finished scraping ${channelUrl}. Total items: ${totalPushed}`);
     }
 }

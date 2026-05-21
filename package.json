@@ -25,7 +25,8 @@
     "apify": "^3.7.2",
     "crawlee": "^3.16.0",
     "date-fns": "^4.2.1",
-    "youtubei.js": "^17.0.1"
+    "youtubei.js": "^17.0.1",
+    "yt-dlp-exec": "^1.0.2"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

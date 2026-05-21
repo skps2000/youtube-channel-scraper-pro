@@ -1,0 +1,254 @@
+{
+  "usableSessionsCount": 2,
+  "retiredSessionsCount": 0,
+  "sessions": [
+    {
+      "id": "session_bJa5XhxRrJ",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.1",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "__Secure-YNID",
+            "value": "18.YT=O-p8wVU04fQHGgQAhbxgn8ElOI3P9j8Kl2X9QxoEI_Sv1Pnict3PncRgdTCSxRPcoHP6wjghd230zqO1po-JNGLx1Cp09aPv9J7fjjBbm_-KyI5f3zXmgVBGrFEb8MDgyj54Ce-Yktx229nlGKwbYz4IlzFFRGhQIOwNU4VKaTQbNo695smbq26AANtibIvjzoiIruNApHOnhgIXGO7ObMGG3UTImwczwrteFWEvJ9VWO5mgQ60xvaLznxDQLFn99TB-5lcvbob68G9lgBYjTawYNCw9UVoxRuvG9hbZv1hBO7OaVUTOfgXH22RbISlHjxxYNJRR6IXhYrp3QbcW1w",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.296Z",
+            "lastAccessed": "2026-05-21T11:45:08.296Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "GPS",
+            "value": "1",
+            "expires": "2026-05-21T12:15:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.298Z",
+            "lastAccessed": "2026-05-21T11:45:08.298Z"
+          },
+          {
+            "key": "YSC",
+            "value": "OszYeVVP-ok",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.299Z",
+            "lastAccessed": "2026-05-21T11:45:08.299Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "__Secure-YEC",
+            "expires": "2023-08-25T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.299Z",
+            "lastAccessed": "2026-05-21T11:45:08.299Z",
+            "sameSite": "lax"
+          },
+          {
+            "key": "VISITOR_INFO1_LIVE",
+            "value": "xls3W-yBRFo",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.299Z",
+            "lastAccessed": "2026-05-21T11:45:08.299Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "VISITOR_PRIVACY_METADATA",
+            "value": "CgJWThIEGgAgRA%3D%3D",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.299Z",
+            "lastAccessed": "2026-05-21T11:45:08.299Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "__Secure-ROLLOUT_TOKEN",
+            "value": "CN7w6YvlvbmK0QEQrN7ojqfKlAMYrN7ojqfKlAM%3D",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.299Z",
+            "lastAccessed": "2026-05-21T11:45:08.299Z",
+            "sameSite": "none"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-05-21T12:35:07.551Z",
+      "createdAt": "2026-05-21T11:45:07.551Z",
+      "usageCount": 1,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_zs17h2KPV7",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.1",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "__Secure-YNID",
+            "value": "18.YT=yYPdZN04bFj77Q6sI_r5XilseUwA13dZGvzl_HqLuVsLv0oE_WgSVw_C3Nm3uBHXW8A0n-Lpw0kYWxrqEZ22LISBapyLc5swz6GOLUmbnY_hat9j-q7i5WDp3d4_x9KHtoJCeXsxnPPeQnaGYQnIpw_k-DmxX7ssvUh6GInyJ7kA4CdGmKMmV4TA_JjebBeMcLhKoUbGBDLlq8F--mujaA7BOI7tn2n3t2D9UBzUvmq76bX0Xx54QTC_jFpXZ0yB5zahuNl2vUq2Zm0DK8ulHeKDUUwufmgdicshOOdI7BOiTybRlTJaxR9P62IqysM8LGKmX5uuWA0HmuGxqin6ow",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.383Z",
+            "lastAccessed": "2026-05-21T11:45:08.383Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "GPS",
+            "value": "1",
+            "expires": "2026-05-21T12:15:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.384Z",
+            "lastAccessed": "2026-05-21T11:45:08.384Z"
+          },
+          {
+            "key": "YSC",
+            "value": "et-uVfaZTDo",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.384Z",
+            "lastAccessed": "2026-05-21T11:45:08.384Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "__Secure-YEC",
+            "expires": "2023-08-25T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.384Z",
+            "lastAccessed": "2026-05-21T11:45:08.384Z",
+            "sameSite": "lax"
+          },
+          {
+            "key": "VISITOR_INFO1_LIVE",
+            "value": "iQnANVCUL_Q",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.384Z",
+            "lastAccessed": "2026-05-21T11:45:08.384Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "VISITOR_PRIVACY_METADATA",
+            "value": "CgJWThIEGgAgIA%3D%3D",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.384Z",
+            "lastAccessed": "2026-05-21T11:45:08.384Z",
+            "sameSite": "none"
+          },
+          {
+            "key": "__Secure-ROLLOUT_TOKEN",
+            "value": "CMO13tiDupbROhCO_eiOp8qUAxiO_eiOp8qUAw%3D%3D",
+            "expires": "2026-11-17T11:45:11.000Z",
+            "domain": "youtube.com",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "extensions": [
+              "Partitioned"
+            ],
+            "hostOnly": false,
+            "creation": "2026-05-21T11:45:08.384Z",
+            "lastAccessed": "2026-05-21T11:45:08.384Z",
+            "sameSite": "none"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-05-21T12:35:07.671Z",
+      "createdAt": "2026-05-21T11:45:07.671Z",
+      "usageCount": 1,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    }
+  ]
+}
