@@ -1,1 +1,6 @@
 /node_modules
+/storage/datasets/default
+/storage/request_queues/default
+/storage
+/storage
+/storage/key_value_stores

@@ -3,5 +3,5 @@
     "videoType": "LONG_FORM",
     "minViews": 1000000,
     "fetchLikes": true,
-    "maxItemsPerChannel": 2
+    "maxItemsPerChannel": 40
 }
