@@ -1,0 +1,6 @@
+{
+    "channelUrls": ["https://www.youtube.com/@mkbhd"],
+    "videoType": "ALL",
+    "minViews": 1000000,
+    "maxItemsPerChannel": 5
+}

@@ -1,0 +1,56 @@
+{
+  "title": "YouTube Channel Scraper Pro",
+  "description": "Scrape videos from YouTube channels with advanced filtering (Long form, Shorts, Date, Views, Likes).",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "channelUrls": {
+      "title": "Channel URLs",
+      "type": "array",
+      "description": "List of YouTube channel URLs to scrape (e.g., https://www.youtube.com/@mkbhd).",
+      "editor": "stringList",
+      "prefill": ["https://www.youtube.com/@mkbhd"]
+    },
+    "videoType": {
+      "title": "Video Type",
+      "type": "string",
+      "description": "Type of videos to scrape.",
+      "enum": ["ALL", "LONG_FORM", "SHORTS"],
+      "enumTitles": ["All Videos", "Long Form Only", "Shorts Only"],
+      "default": "ALL"
+    },
+    "minUploadDate": {
+      "title": "Minimum Upload Date",
+      "type": "string",
+      "description": "Filter videos uploaded ON or AFTER this date. Format: YYYY-MM-DD. Leave empty to ignore.",
+      "editor": "textfield",
+      "prefill": ""
+    },
+    "maxUploadDate": {
+      "title": "Maximum Upload Date",
+      "type": "string",
+      "description": "Filter videos uploaded ON or BEFORE this date. Format: YYYY-MM-DD. Leave empty to ignore.",
+      "editor": "textfield",
+      "prefill": ""
+    },
+    "minViews": {
+      "title": "Minimum Views",
+      "type": "integer",
+      "description": "Only scrape videos with at least this many views.",
+      "default": 0
+    },
+    "minLikes": {
+      "title": "Minimum Likes",
+      "type": "integer",
+      "description": "Only scrape videos with at least this many likes.",
+      "default": 0
+    },
+    "maxItemsPerChannel": {
+      "title": "Maximum Items Per Channel",
+      "type": "integer",
+      "description": "Maximum number of videos to scrape per channel (0 for unlimited).",
+      "default": 100
+    }
+  },
+  "required": ["channelUrls", "videoType"]
+}

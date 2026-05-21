@@ -1,0 +1,35 @@
+{
+  "name": "youtube-channel-scraper-pro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/main.js",
+    "build": "tsc",
+    "dev": "ts-node-esm src/main.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skps2000/youtube-channel-scraper-pro.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/skps2000/youtube-channel-scraper-pro/issues"
+  },
+  "homepage": "https://github.com/skps2000/youtube-channel-scraper-pro#readme",
+  "dependencies": {
+    "apify": "^3.7.2",
+    "crawlee": "^3.16.0",
+    "date-fns": "^4.2.1",
+    "youtubei.js": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}

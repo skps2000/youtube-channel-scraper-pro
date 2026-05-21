@@ -1,0 +1,8 @@
+{
+  "name": "youtube-channel-scraper-pro",
+  "version": "0.0.1",
+  "buildTag": "latest",
+  "env": null,
+  "isPublic": false,
+  "dockerfile": "./Dockerfile"
+}
