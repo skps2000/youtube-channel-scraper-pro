@@ -1,8 +1,6 @@
 # YouTube Channel Scraper Pro 🚀
 
-An ultra-fast, robust, and highly customizable Apify Actor for scraping YouTube channel videos. 
-
-Unlike other scrapers that rely on heavy headless browsers or unstable third-party APIs, **YouTube Channel Scraper Pro** directly parses YouTube's internal `ytInitialData`. This ensures lightning-fast execution times, zero CAPTCHA blocking, and maximum reliability.
+A high-performance, reliable Apify Actor for scraping YouTube channel videos — including Long-Form and Shorts — with advanced filtering and infinite scroll support.
 
 🔗 **Apify Actor URL:** [https://apify.com/skcho/youtube-channel-scraper-pro](https://apify.com/skcho/youtube-channel-scraper-pro)
 
@@ -10,34 +8,45 @@ Unlike other scrapers that rely on heavy headless browsers or unstable third-par
 
 ## ✨ Key Features
 
-- **⚡ Ultra-Fast Extraction:** Scrapes video data in just 1-2 seconds per channel without launching a full browser.
-- **🗂️ Long-Form & Shorts Separation:** Precisely filter and categorize videos by their type (Long Form vs Shorts).
-- ** Богатый 정보 추출 (Rich Data Extraction):** Automatically extracts Titles, View Counts, Upload Dates, Exact Durations, HQ Thumbnails, and Animated WebP Previews.
-- **👍 Optional Deep Crawling (Likes):** Choose to deeply crawl individual video pages in parallel to extract **Like counts**.
-- **🎯 Precision Filtering:** Filter out videos that don't meet your criteria (e.g., Minimum Views, Minimum Likes, Max Items).
+- **🔄 Infinite Scroll (Pagination):** Automatically scrolls through the entire channel page using a real browser — no 30-video limit.
+- **🗂️ Long-Form & Shorts Separation:** Precisely scrape and categorize videos by type.
+- **📦 Rich Data Extraction:** Titles, View Counts, Upload Dates, Durations, HQ Thumbnails, and Animated WebP Previews — all extracted out of the box.
+- **👍 Optional Like Count Extraction:** A lightweight, high-concurrency HTTP-based fetcher grabs like counts at **~430 videos/min** without launching extra browsers.
+- **🎯 Precision Filtering:** Filter by minimum views, likes, upload date range, and more.
+- **🧠 Hybrid Architecture:** `PlaywrightCrawler` handles real-browser scrolling; `HttpCrawler` handles likes — minimizing memory usage and maximizing speed.
 
 ---
 
-## 🛠️ Module Specification (Input Parameters)
+## ⚡ Performance
 
-This actor provides a highly detailed Input Schema allowing you to tailor the scraping process exactly to your needs.
+| Scenario | Speed |
+| :--- | :--- |
+| Channel scroll + data extract (100 videos) | ~15 seconds |
+| Like count fetch (per 100 videos, `fetchLikes: true`) | ~15 seconds |
+| **Total for 100 videos with likes** | **~30 seconds** |
+
+> Likes are fetched at **~430 requests/min** in parallel via lightweight HTTP requests — **no extra browser needed**.
+
+---
+
+## 🛠️ Input Parameters
 
 | Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `channelUrls` | `Array<String>` | *(Required)* | A list of YouTube channel URLs you want to scrape. (e.g., `https://www.youtube.com/@mkbhd`) |
-| `videoType` | `Enum` | `"ALL"` | The type of videos to scrape. Options: `"ALL"` (All Videos), `"LONG_FORM"` (Long Form Only), `"SHORTS"` (Shorts Only). |
-| `minUploadDate` | `String` | `""` | Filter videos uploaded ON or AFTER this date (Format: `YYYY-MM-DD`). |
-| `maxUploadDate` | `String` | `""` | Filter videos uploaded ON or BEFORE this date (Format: `YYYY-MM-DD`). |
-| `minViews` | `Integer` | `0` | Only scrape videos that have at least this many views. (e.g., `1000000` for 1M+ views). |
-| `fetchLikes` | `Boolean` | `false` | **(Slower)** If enabled, the crawler will visit every single video page in parallel to extract exact Like counts. *Warning: Enabling this increases scraping time and Apify credit consumption.* |
-| `minLikes` | `Integer` | `0` | *(Requires `fetchLikes: true`)* Only scrape videos with at least this many likes. |
-| `maxItemsPerChannel` | `Integer` | `100` | The maximum number of videos to scrape per channel. Set to `0` or a very high number for unlimited (within the first page load). |
+| `channelUrls` | `Array<String>` | *(Required)* | YouTube channel URLs to scrape (e.g., `https://www.youtube.com/@mkbhd`). Multiple channels supported. |
+| `videoType` | `Enum` | `"ALL"` | Which video type to scrape: `"ALL"`, `"LONG_FORM"`, or `"SHORTS"`. |
+| `minUploadDate` | `String` | `""` | Only include videos uploaded **on or after** this date. Format: `YYYY-MM-DD`. |
+| `maxUploadDate` | `String` | `""` | Only include videos uploaded **on or before** this date. Format: `YYYY-MM-DD`. |
+| `minViews` | `Integer` | `0` | Only include videos with at least this many views. (e.g., `1000000` for 1M+). |
+| `maxItemsPerChannel` | `Integer` | `100` | Maximum videos to scrape **per channel**. Uses infinite scroll to exceed YouTube's default 30-video page limit. |
+| `fetchLikes` | `Boolean` | `false` | If enabled, fetches exact Like counts for every video via fast parallel HTTP requests. Adds ~15s per 100 videos. |
+| `minLikes` | `Integer` | `0` | *(Requires `fetchLikes: true`)* Only include videos with at least this many likes. |
 
 ---
 
 ## 📄 Output Data Structure
 
-The scraper pushes clean, structured JSON data directly to the default Apify Dataset. Below is an example of the extracted data format:
+Each video is pushed as a JSON object to the Apify Dataset:
 
 ```json
 {
@@ -45,33 +54,52 @@ The scraper pushes clean, structured JSON data directly to the default Apify Dat
   "channelUrl": "https://www.youtube.com/@mkbhd",
   "videoId": "eFeDpUVEy48",
   "videoUrl": "https://www.youtube.com/watch?v=eFeDpUVEy48",
-  "title": "“The Biggest Android Update Ever”",
+  "title": "The Biggest Android Update Ever",
   "type": "LONG_FORM",
-  "uploadDateText": "7 days ago",
+  "uploadDateText": "8 days ago",
   "viewCount": 4099999,
   "durationText": "12:59",
-  "thumbnailUrl": "https://i.ytimg.com/vi/eFeDpUVEy48/hqdefault.jpg?sqp=...",
-  "animatedThumbnailUrl": "https://i.ytimg.com/an_webp/eFeDpUVEy48/mqdefault_6s.webp?du=3000&...",
+  "thumbnailUrl": "https://i.ytimg.com/vi/eFeDpUVEy48/hqdefault.jpg",
+  "animatedThumbnailUrl": "https://i.ytimg.com/an_webp/eFeDpUVEy48/mqdefault_6s.webp",
   "likeCount": 125000
 }
 ```
 
-### Data Field Details:
-- `channelName`: The official display name of the YouTube channel.
-- `type`: Either `"LONG_FORM"` or `"SHORTS"`.
-- `viewCount`: Perfectly parsed integer value of views (e.g., `4.1M views` -> `4100000`).
-- `durationText`: Exact length of the video (e.g., `12:59`).
-- `thumbnailUrl`: The highest quality static thumbnail image URL available.
-- `animatedThumbnailUrl`: The 3-second animated WebP preview image shown on YouTube hover.
-- `likeCount`: Extracted ONLY if `fetchLikes` is set to `true`. Parsed integer value of likes.
+### Field Reference
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `channelName` | `String` | Official channel display name |
+| `channelUrl` | `String` | Input channel URL |
+| `videoId` | `String` | YouTube video ID |
+| `videoUrl` | `String` | Full `youtube.com/watch?v=...` URL |
+| `title` | `String` | Video title |
+| `type` | `String` | `"LONG_FORM"` or `"SHORTS"` |
+| `uploadDateText` | `String` | Relative upload date (e.g., `"8 days ago"`) |
+| `viewCount` | `Integer` | Parsed integer view count |
+| `durationText` | `String` | Video duration string (e.g., `"12:59"`) |
+| `thumbnailUrl` | `String` | Highest-quality static thumbnail URL |
+| `animatedThumbnailUrl` | `String` | 3-second animated WebP preview URL |
+| `likeCount` | `Integer` | Like count — present only when `fetchLikes: true` |
 
 ---
 
-## ⚙️ How it Works (Under the Hood)
+## ⚙️ How It Works (Architecture)
 
-1. **Phase 1 (Channel Page):** The actor uses `Crawlee`'s `HttpCrawler` to fetch the raw HTML of the target channel's `/videos` and `/shorts` tabs.
-2. **Phase 2 (Data Parsing):** It uses Regex to locate the `ytInitialData` JSON object embedded in the HTML script tags. This bypasses the need to render the DOM, drastically reducing compute overhead.
-3. **Phase 3 (Parallel Deep Crawl - Optional):** If `fetchLikes` is enabled, the actor dynamically queues up to 10 concurrent HTTP requests (configurable concurrency) to fetch individual video watch pages and extracts the Like count directly from the segmented button view model.
+This actor uses a **two-phase hybrid architecture** to maximize both stability and speed:
+
+### Phase 1 — Scroll & Extract (PlaywrightCrawler)
+A real Chromium browser navigates to the channel's `/videos` and `/shorts` tabs. It automatically scrolls down the page, triggering YouTube's infinite scroll to load more videos, until `maxItemsPerChannel` is reached or the page end is detected. Video metadata is then extracted directly from the rendered DOM.
+
+**Browser optimizations:**
+- Blocks unnecessary resources (images, fonts, media) to reduce memory usage
+- Disables GPU, extensions, and background services
+- Anti-bot fingerprint masking (`navigator.webdriver` suppressed)
+
+### Phase 2 — Like Count Fetch (HttpCrawler, Optional)
+If `fetchLikes` is enabled, up to **20 concurrent lightweight HTTP requests** are made to individual `youtube.com/watch?v=...` pages. Like counts are extracted by parsing the embedded `ytInitialData` JSON object — **no browser required**. This runs at ~430 requests/min.
+
+---
 
 ## 🤝 Support & Issues
-If you encounter any bugs, missing data, or have feature requests, please reach out via the Apify Issues tab!
+Found a bug or have a feature request? Please reach out via the Apify Issues tab!
