@@ -1,9 +1,0 @@
-{
-	"id": "WNNwW1EdfF1DYjH",
-	"json": "{\"id\":\"WNNwW1EdfF1DYjH\",\"url\":\"https://www.youtube.com/watch?v=coX4duwUCpw\",\"loadedUrl\":\"https://www.youtube.com/watch?v=coX4duwUCpw\",\"uniqueKey\":\"https://www.youtube.com/watch?v=coX4duwUCpw\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"type\":\"VIDEO_PAGE\",\"videoData\":{\"channelName\":\"Marques Brownlee\",\"channelUrl\":\"https://www.youtube.com/@mkbhd\",\"videoId\":\"coX4duwUCpw\",\"videoUrl\":\"https://www.youtube.com/watch?v=coX4duwUCpw\",\"title\":\"Why New Smartphone Cameras Feel Worse\",\"type\":\"LONG_FORM\",\"uploadDateText\":\"9 days ago\",\"viewCount\":2700000,\"durationText\":\"7:23\",\"thumbnailUrl\":\"https://i.ytimg.com/vi/coX4duwUCpw/hqdefault.jpg?sqp=-oaymwEnCNACELwBSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLCaA-IFwDJE1wJoBoPYZvVG45lJSg\",\"animatedThumbnailUrl\":\"https://i.ytimg.com/an_webp/coX4duwUCpw/mqdefault_6s.webp?du=3000&sqp=CPTfu9AG&rs=AOn4CLA_JVQLoMdF2hmAe06My9FLy17hbQ\",\"likeCount\":95000},\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-05-21T12:22:22.243Z\"}",
-	"method": "GET",
-	"orderNo": null,
-	"retryCount": 0,
-	"uniqueKey": "https://www.youtube.com/watch?v=coX4duwUCpw",
-	"url": "https://www.youtube.com/watch?v=coX4duwUCpw"
-}

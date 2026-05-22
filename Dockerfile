@@ -1,30 +1,24 @@
-# Specify the base Docker image. You can read more about
-# the available images at https://docs.apify.com/sdk/js/docs/upgrading/upgrading-to-v3#dockerfile
-FROM apify/actor-node:20
+# Apify actor-node-playwright-chrome includes Chromium, Node.js, and all browser deps.
+# See: https://docs.apify.com/sdk/js/docs/upgrading/upgrading-to-v3#dockerfile
+FROM apify/actor-node-playwright-chrome:20
 
-# Copy just package.json and package-lock.json
-# to speed up the build using Docker layer cache.
+# Copy package files first to leverage Docker layer caching
 COPY package*.json ./
 
-# Install NPM packages, skip optional and development dependencies to
-# keep the image small. Avoid logging too much and print the installed
-# version of NPM.
+# Install production + dev deps (need TypeScript for compile step)
 RUN npm --quiet set progress=false \
-    && npm install --omit=dev --omit=optional \
+    && npm install \
     && echo "Installed NPM version:" \
-    && npm --version \
-    && rm -r ~/.npm
+    && npm --version
 
-# Next, copy the remaining files and directories with the source code.
-# Since we do this after NPM install, quick build will be really fast
-# for most source file changes.
+# Copy the rest of the source code
 COPY . ./
 
-# Install typescript to compile the code
-RUN npm install -g typescript
+# Compile TypeScript to JavaScript
+RUN npm run build
 
-# Compile TypeScript
-RUN tsc
+# Prune dev dependencies after build to keep image lean
+RUN npm prune --production
 
-# Run the image
+# Run the Actor
 CMD npm start

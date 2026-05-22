@@ -25,6 +25,7 @@
     "apify": "^3.7.2",
     "crawlee": "^3.16.0",
     "date-fns": "^4.2.1",
+    "playwright": "^1.60.0",
     "youtubei.js": "^17.0.1"
   },
   "devDependencies": {
