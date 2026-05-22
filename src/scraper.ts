@@ -157,18 +157,20 @@ export class YouTubeScraper {
     async init() {}
     async getChannelId(url: string): Promise<string | null> { return url; }
 
-    async scrapeChannel(
-        channelId: string,
-        channelUrl: string,
+    async scrapeChannels(
+        channelUrls: string[],
         options: ScrapeOptions,
         pushData: (data: any) => Promise<void>
     ) {
-        const tabs: { url: string; type: string }[] = [];
-        if (options.videoType === 'ALL' || options.videoType === 'LONG_FORM') {
-            tabs.push({ url: `${channelUrl}/videos`, type: 'LONG_FORM_TAB' });
-        }
-        if (options.videoType === 'ALL' || options.videoType === 'SHORTS') {
-            tabs.push({ url: `${channelUrl}/shorts`, type: 'SHORTS_TAB' });
+        const tabs: { url: string; type: string; channelUrl: string }[] = [];
+        
+        for (const channelUrl of channelUrls) {
+            if (options.videoType === 'ALL' || options.videoType === 'LONG_FORM') {
+                tabs.push({ url: `${channelUrl}/videos`, type: 'LONG_FORM_TAB', channelUrl });
+            }
+            if (options.videoType === 'ALL' || options.videoType === 'SHORTS') {
+                tabs.push({ url: `${channelUrl}/shorts`, type: 'SHORTS_TAB', channelUrl });
+            }
         }
 
         const maxItems = options.maxItemsPerChannel && options.maxItemsPerChannel > 0
@@ -215,6 +217,7 @@ export class YouTubeScraper {
 
             async requestHandler({ request, page }) {
                 const type = request.userData.type as 'LONG_FORM_TAB' | 'SHORTS_TAB';
+                const channelUrl = request.userData.channelUrl as string;
                 const videoType = type === 'LONG_FORM_TAB' ? 'LONG_FORM' : 'SHORTS';
 
                 // Get channel name
@@ -295,9 +298,9 @@ export class YouTubeScraper {
             },
         });
 
-        await playwrightCrawler.run(tabs.map(t => ({ url: t.url, userData: { type: t.type } })));
+        await playwrightCrawler.run(tabs.map(t => ({ url: t.url, userData: { type: t.type, channelUrl: t.channelUrl } })));
 
-        log.info(`Phase 1 complete. Collected ${collectedVideos.length} videos.`);
+        log.info(`Phase 1 complete. Collected ${collectedVideos.length} videos across all channels.`);
 
         // ── PHASE 2: Fetch likes via fast HttpCrawler ──────────────────────
         if (options.fetchLikes && collectedVideos.length > 0) {
@@ -310,6 +313,6 @@ export class YouTubeScraper {
             }
         }
 
-        log.info(`Finished scraping ${channelUrl}. Total items pushed: ${collectedVideos.length}`);
+        log.info(`Finished scraping all channels. Total items pushed: ${collectedVideos.length}`);
     }
 }

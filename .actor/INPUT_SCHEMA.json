@@ -55,7 +55,7 @@
       "title": "Maximum Items Per Channel",
       "type": "integer",
       "description": "Maximum number of videos to scrape per channel (0 for unlimited).",
-      "default": 100
+      "default": 5
     }
   },
   "required": ["channelUrls", "videoType"]

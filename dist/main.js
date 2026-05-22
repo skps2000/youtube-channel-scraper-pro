@@ -21,12 +21,17 @@ const pushData = async (data) => {
     // We will just push data to the dataset
     await Actor.pushData(data);
 };
+// We still get channelId if needed, but since we rely on URLs now, we can just pass them all
+const validUrls = [];
 for (const url of input.channelUrls) {
     const channelId = await scraper.getChannelId(url);
     if (!channelId) {
         log.error(`Skipping ${url} because channel ID could not be resolved.`);
         continue;
     }
-    await scraper.scrapeChannel(channelId, url, input, pushData);
+    validUrls.push(url);
+}
+if (validUrls.length > 0) {
+    await scraper.scrapeChannels(validUrls, input, pushData);
 }
 await Actor.exit();
