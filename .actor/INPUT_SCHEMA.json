@@ -56,6 +56,12 @@
       "type": "integer",
       "description": "Maximum number of videos to scrape per channel (0 for unlimited).",
       "default": 5
+    },
+    "maxDaysOld": {
+      "title": "Maximum Days Old (e.g. 30 for 1 month)",
+      "type": "integer",
+      "description": "Stop scraping videos uploaded older than this many days. Leave 0 to disable.",
+      "default": 0
     }
   },
   "required": ["channelUrls", "videoType"]
