@@ -1,4 +1,4 @@
-import { PlaywrightCrawler } from 'crawlee';
+import { PlaywrightCrawler, HttpCrawler } from 'crawlee';
 import { log } from 'apify';
 
 export interface ScrapeOptions {
@@ -40,37 +40,39 @@ function parseCount(text?: string): number {
     return Math.floor(num);
 }
 
-/** Extract all video cards from the current page state via page.evaluate() */
+function normalizeDate(d: string): string {
+    return d
+        .replace(/(\d+)d ago/i, '$1 days ago')
+        .replace(/(\d+)h ago/i, '$1 hours ago')
+        .replace(/(\d+)w ago/i, '$1 weeks ago')
+        .replace(/(\d+)mo? ago/i, '$1 months ago')
+        .replace(/(\d+)y ago/i, '$1 years ago');
+}
+
+/** Extract all video cards from the current page DOM */
 async function extractVideoCards(page: any): Promise<any[]> {
     return page.evaluate(() => {
         const results: any[] = [];
         const items = document.querySelectorAll('ytd-rich-item-renderer');
-
         for (const item of items) {
-            // videoId and URL from anchor tag
             const anchor = item.querySelector('a[href*="/watch?v="], a[href*="/shorts/"]') as HTMLAnchorElement | null;
             if (!anchor) continue;
-
             const href = anchor.getAttribute('href') || '';
             const watchMatch = href.match(/\/watch\?v=([^&]+)/);
             const shortsMatch = href.match(/\/shorts\/([^?]+)/);
             const videoId = (watchMatch?.[1] || shortsMatch?.[1] || '').trim();
             if (!videoId) continue;
 
-            // title from h3 title attribute (most reliable)
             const h3 = item.querySelector('h3[title], h3.ytLockupMetadataViewModelHeadingReset') as HTMLElement | null;
             const title = (h3?.getAttribute('title') || h3?.textContent || '').trim();
 
-            // metadata spans: views and date
             const metaSpans = Array.from(item.querySelectorAll('span.ytContentMetadataViewModelMetadataText')) as HTMLElement[];
             const viewsText = (metaSpans[0]?.textContent || '').trim();
             const dateText = (metaSpans[1]?.textContent || '').trim();
 
-            // duration badge
             const durationEl = item.querySelector('.ytBadgeShapeText') as HTMLElement | null;
             const durationText = (durationEl?.textContent || '').trim();
 
-            // thumbnail
             const img = item.querySelector('img.ytCoreImageHost') as HTMLImageElement | null;
             const thumbnailUrl = img?.src || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
@@ -78,6 +80,77 @@ async function extractVideoCards(page: any): Promise<any[]> {
         }
         return results;
     });
+}
+
+/**
+ * Phase 2: Fetch like counts for a batch of videos using lightweight HttpCrawler.
+ * Parses ytInitialData from watch page HTML — same strategy as before but now only
+ * for this specific purpose, keeping Playwright browser free.
+ */
+async function fetchLikesForVideos(
+    videos: VideoData[],
+    options: ScrapeOptions,
+    pushData: (data: any) => Promise<void>
+) {
+    const videosById = new Map(videos.map(v => [v.videoId, v]));
+
+    const httpCrawler = new HttpCrawler({
+        maxConcurrency: 20, // Fast parallel HTTP requests
+        requestHandlerTimeoutSecs: 30,
+        async requestHandler({ request, body }) {
+            const videoId = request.userData.videoId as string;
+            const videoData = videosById.get(videoId);
+            if (!videoData) return;
+
+            const html = body.toString();
+
+            // Extract like count from ytInitialData
+            let likeCount = 0;
+            const match = html.match(/var ytInitialData = (\{.*?\});<\/script>/);
+            if (match?.[1]) {
+                try {
+                    const data = JSON.parse(match[1]);
+                    const findLikes = (obj: any): string => {
+                        if (!obj || typeof obj !== 'object') return '';
+                        if (Array.isArray(obj)) {
+                            for (const item of obj) { const r = findLikes(item); if (r) return r; }
+                            return '';
+                        }
+                        if (obj.segmentedLikeDislikeButtonViewModel) {
+                            const btn = obj.segmentedLikeDislikeButtonViewModel
+                                ?.likeButtonViewModel?.likeButtonViewModel
+                                ?.toggleButtonViewModel?.toggleButtonViewModel
+                                ?.defaultButtonViewModel?.buttonViewModel;
+                            if (btn?.title) return btn.title;
+                        }
+                        for (const key of Object.keys(obj)) {
+                            const r = findLikes(obj[key]);
+                            if (r) return r;
+                        }
+                        return '';
+                    };
+                    likeCount = parseCount(findLikes(data.contents));
+                } catch (_) { /* ignore parse errors */ }
+            }
+
+            videoData.likeCount = likeCount;
+
+            if (options.minLikes && likeCount < options.minLikes) {
+                log.info(`Skipped ${videoId} — ${likeCount} likes < min ${options.minLikes}`);
+                return;
+            }
+
+            await pushData(videoData);
+            log.info(`✓ ${videoData.title} — ${likeCount.toLocaleString()} likes`);
+        },
+    });
+
+    await httpCrawler.run(
+        videos.map(v => ({
+            url: `https://www.youtube.com/watch?v=${v.videoId}`,
+            userData: { videoId: v.videoId },
+        }))
+    );
 }
 
 export class YouTubeScraper {
@@ -102,12 +175,14 @@ export class YouTubeScraper {
             ? options.maxItemsPerChannel
             : Infinity;
 
+        // Collect all videos first (Phase 1), then fetch likes (Phase 2)
+        const collectedVideos: VideoData[] = [];
         let totalPushed = 0;
 
-        const crawler = new PlaywrightCrawler({
-            // 1 browser per channel tab — don't overload when fetchLikes opens many pages
-            maxConcurrency: options.fetchLikes ? 3 : 5,
-            requestHandlerTimeoutSecs: 600,
+        // ── PHASE 1: Playwright scroll + DOM extract ──────────────────────
+        const playwrightCrawler = new PlaywrightCrawler({
+            maxConcurrency: 2, // Low concurrency: each tab uses ~200MB browser memory
+            requestHandlerTimeoutSecs: 300,
             headless: true,
             launchContext: {
                 launchOptions: {
@@ -115,58 +190,31 @@ export class YouTubeScraper {
                         '--no-sandbox',
                         '--disable-setuid-sandbox',
                         '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--disable-extensions',
+                        '--disable-background-networking',
+                        '--disable-sync',
+                        '--disable-translate',
+                        '--mute-audio',
+                        '--no-first-run',
+                        '--safebrowsing-disable-auto-update',
                         '--disable-blink-features=AutomationControlled',
                     ],
                 },
             },
-            // Mimic a real browser to avoid bot-detection
             preNavigationHooks: [
                 async ({ page }) => {
-                    await page.setExtraHTTPHeaders({
-                        'Accept-Language': 'en-US,en;q=0.9',
-                    });
+                    // Block heavy resources not needed for scraping
+                    await page.route('**/*.{mp4,webm,mp3,woff,woff2,ttf,png,svg}', r => r.abort());
+                    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
                     await page.addInitScript(() => {
                         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
                     });
                 },
             ],
 
-            async requestHandler({ request, page, crawler: currentCrawler }) {
-                const type = request.userData.type as 'LONG_FORM_TAB' | 'SHORTS_TAB' | 'VIDEO_PAGE';
-
-                // ── VIDEO PAGE: fetch likes only ──────────────────────────────
-                if (type === 'VIDEO_PAGE') {
-                    const videoData = request.userData.videoData as VideoData;
-                    log.info(`Fetching likes for: ${videoData.title}`);
-                    try {
-                        // Wait for like button (new YouTube UI)
-                        await page.waitForSelector(
-                            'like-button-view-model button, ytd-toggle-button-renderer button',
-                            { timeout: 20000 }
-                        ).catch(() => null);
-
-                        const likeText: string = await page.evaluate(() => {
-                            // New segmented like button
-                            const btn = document.querySelector('like-button-view-model button');
-                            if (btn) return btn.getAttribute('aria-label') || btn.textContent || '';
-                            // Legacy toggle button
-                            const legacy = document.querySelector('ytd-toggle-button-renderer button');
-                            if (legacy) return legacy.getAttribute('aria-label') || legacy.textContent || '';
-                            return '';
-                        });
-
-                        videoData.likeCount = parseCount(likeText);
-                    } catch (e: any) {
-                        log.warning(`Like fetch failed for ${videoData.videoId}: ${e.message}`);
-                    }
-
-                    if (options.minLikes && (videoData.likeCount ?? 0) < options.minLikes) return;
-                    await pushData(videoData);
-                    log.info(`✓ ${videoData.videoId} — ${videoData.likeCount?.toLocaleString()} likes`);
-                    return;
-                }
-
-                // ── CHANNEL TAB: scroll + extract ────────────────────────────
+            async requestHandler({ request, page }) {
+                const type = request.userData.type as 'LONG_FORM_TAB' | 'SHORTS_TAB';
                 const videoType = type === 'LONG_FORM_TAB' ? 'LONG_FORM' : 'SHORTS';
 
                 // Get channel name
@@ -174,31 +222,31 @@ export class YouTubeScraper {
                 try {
                     await page.waitForSelector('yt-page-header-view-model, #channel-header-container', { timeout: 15000 });
                     channelName = await page.evaluate(() => {
-                        const el =
-                            document.querySelector('yt-page-header-view-model h1 span') ||
-                            document.querySelector('#channel-header-container #text') ||
-                            document.querySelector('ytd-channel-name #text');
-                        return el?.textContent?.trim() || 'Unknown Channel';
+                        return (
+                            document.querySelector('yt-page-header-view-model h1 span')?.textContent?.trim() ||
+                            document.querySelector('#channel-header-container #text')?.textContent?.trim() ||
+                            'Unknown Channel'
+                        );
                     });
                 } catch (_) { /* fine */ }
 
-                log.info(`Scraping [${type}] for channel: ${channelName}`);
+                log.info(`Scraping [${type}] for: ${channelName}`);
 
-                // ── SCROLL LOOP ───────────────────────────────────────────────
-                // Wait for at least one video card before starting
+                // Wait for first video to appear
                 await page.waitForSelector('ytd-rich-item-renderer', { timeout: 30000 });
 
-                let staleScrolls = 0;
-                const MAX_STALE = 6;          // stop after 6 scrolls with no new items
-                const SCROLL_PAUSE = 1800;    // ms between scrolls
+                // Scroll until maxItems reached or no new items appear
+                const SCROLL_PAUSE = 1500;
+                const MAX_STALE = 5;
                 let lastCount = 0;
+                let staleScrolls = 0;
 
                 while (staleScrolls < MAX_STALE) {
-                    const current = await page.$$eval('ytd-rich-item-renderer', els => els.length);
+                    const current: number = await page.$$eval('ytd-rich-item-renderer', els => els.length);
                     lastCount = current;
 
                     if (current >= maxItems) {
-                        log.info(`[${channelName}] Reached target (${current} items), stopping scroll.`);
+                        log.info(`[${channelName}] Target reached (${current} items). Stopping scroll.`);
                         break;
                     }
 
@@ -209,29 +257,21 @@ export class YouTubeScraper {
                         log.info(`[${channelName}] Loaded ${current} items...`);
                     }
 
-                    await page.evaluate(() => window.scrollBy(0, window.innerHeight * 4));
+                    await page.evaluate(() => window.scrollBy(0, window.innerHeight * 5));
                     await page.waitForTimeout(SCROLL_PAUSE);
                 }
 
-                log.info(`[${channelName}] Scroll complete — total DOM items: ${lastCount}`);
+                log.info(`[${channelName}] Scroll done — ${lastCount} DOM items loaded`);
 
-                // ── EXTRACT ───────────────────────────────────────────────────
+                // Extract video cards
                 const cards = await extractVideoCards(page);
-                log.info(`[${channelName}] Extracted ${cards.length} video cards from DOM`);
+                log.info(`[${channelName}] Extracted ${cards.length} cards`);
 
                 for (const card of cards) {
                     if (totalPushed >= maxItems) break;
 
                     const viewCount = parseCount(card.viewsText);
                     if (options.minViews && viewCount < options.minViews) continue;
-
-                    // Normalize short dates like "8d ago" → "8 days ago"
-                    const normalizeDate = (d: string) =>
-                        d.replace(/(\d+)d ago/i, '$1 days ago')
-                         .replace(/(\d+)h ago/i, '$1 hours ago')
-                         .replace(/(\d+)w ago/i, '$1 weeks ago')
-                         .replace(/(\d+)mo? ago/i, '$1 months ago')
-                         .replace(/(\d+)y ago/i, '$1 years ago');
 
                     const videoData: VideoData = {
                         channelName,
@@ -247,22 +287,29 @@ export class YouTubeScraper {
                         animatedThumbnailUrl: `https://i.ytimg.com/an_webp/${card.videoId}/mqdefault_6s.webp`,
                     };
 
-                    if (options.fetchLikes) {
-                        await currentCrawler.addRequests([{
-                            url: videoData.videoUrl,
-                            userData: { type: 'VIDEO_PAGE', videoData },
-                        }]);
-                    } else {
-                        await pushData(videoData);
-                    }
+                    collectedVideos.push(videoData);
                     totalPushed++;
                 }
 
-                log.info(`[${channelName}] ${type} done — queued/pushed: ${totalPushed}`);
+                log.info(`[${channelName}] ${type} complete — ${totalPushed} videos collected`);
             },
         });
 
-        await crawler.run(tabs.map(t => ({ url: t.url, userData: { type: t.type } })));
-        log.info(`Finished scraping ${channelUrl}. Total items queued/pushed: ${totalPushed}`);
+        await playwrightCrawler.run(tabs.map(t => ({ url: t.url, userData: { type: t.type } })));
+
+        log.info(`Phase 1 complete. Collected ${collectedVideos.length} videos.`);
+
+        // ── PHASE 2: Fetch likes via fast HttpCrawler ──────────────────────
+        if (options.fetchLikes && collectedVideos.length > 0) {
+            log.info(`Phase 2: Fetching likes for ${collectedVideos.length} videos via HttpCrawler...`);
+            await fetchLikesForVideos(collectedVideos, options, pushData);
+        } else {
+            // No likes needed — push all directly
+            for (const video of collectedVideos) {
+                await pushData(video);
+            }
+        }
+
+        log.info(`Finished scraping ${channelUrl}. Total items pushed: ${collectedVideos.length}`);
     }
 }
