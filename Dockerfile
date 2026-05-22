@@ -1,24 +1,25 @@
-# Apify actor-node-playwright-chrome includes Chromium, Node.js, and all browser deps.
-# See: https://docs.apify.com/sdk/js/docs/upgrading/upgrading-to-v3#dockerfile
+# apify/actor-node-playwright-chrome includes Chromium + all browser deps pre-installed.
+# Runs as non-root "myuser" — use --chown to avoid permission errors on npm install.
+# See: https://docs.apify.com/sdk/js/docs/guides/docker-images
 FROM apify/actor-node-playwright-chrome:20
 
-# Copy package files first to leverage Docker layer caching
-COPY package*.json ./
+# Copy package files with correct ownership for the non-root user
+COPY --chown=myuser:myuser package*.json ./
 
-# Install production + dev deps (need TypeScript for compile step)
+# Install all deps (including devDeps for TypeScript compile)
 RUN npm --quiet set progress=false \
     && npm install \
     && echo "Installed NPM version:" \
     && npm --version
 
-# Copy the rest of the source code
-COPY . ./
+# Copy the rest of the source with correct ownership
+COPY --chown=myuser:myuser . ./
 
-# Compile TypeScript to JavaScript
+# Compile TypeScript → JavaScript
 RUN npm run build
 
-# Prune dev dependencies after build to keep image lean
-RUN npm prune --production
+# Remove dev dependencies to keep the final image lean
+RUN npm prune --omit=dev
 
 # Run the Actor
 CMD npm start
