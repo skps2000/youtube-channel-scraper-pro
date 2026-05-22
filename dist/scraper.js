@@ -25,6 +25,24 @@ function normalizeDate(d) {
         .replace(/(\d+)mo? ago/i, '$1 months ago')
         .replace(/(\d+)y ago/i, '$1 years ago');
 }
+function isOlderThanDays(dateText, maxDays) {
+    const text = dateText.toLowerCase();
+    const match = text.match(/(\d+)\s*(second|minute|hour|day|week|month|year)s?/);
+    if (!match)
+        return false;
+    const value = parseInt(match[1]);
+    const unit = match[2];
+    let days = 0;
+    if (unit === 'day')
+        days = value;
+    else if (unit === 'week')
+        days = value * 7;
+    else if (unit === 'month')
+        days = value * 30;
+    else if (unit === 'year')
+        days = value * 365;
+    return days > maxDays;
+}
 /** Extract all video cards from the current page DOM */
 async function extractVideoCards(page) {
     return page.evaluate(() => {
@@ -213,12 +231,19 @@ export class YouTubeScraper {
                         const videos = extractVideosFromInitialData(data);
                         log.info(`[${channelName}] Fast-track found ${videos.length} videos`);
                         let pushed = 0;
+                        let hitDateLimit = false;
                         for (const card of videos) {
                             if (pushed >= maxItems)
                                 break;
                             const viewCount = parseCount(card.viewsText);
                             if (options.minViews && viewCount < options.minViews)
                                 continue;
+                            const normalizedDate = normalizeDate(card.dateText);
+                            if (options.maxDaysOld && options.maxDaysOld > 0 && isOlderThanDays(normalizedDate, options.maxDaysOld)) {
+                                log.info(`[${channelName}] Video is older than ${options.maxDaysOld} days (${normalizedDate}). Stopping.`);
+                                hitDateLimit = true;
+                                break;
+                            }
                             collectedVideos.push({
                                 channelName,
                                 channelUrl,
@@ -226,7 +251,7 @@ export class YouTubeScraper {
                                 videoUrl: `https://www.youtube.com/watch?v=${card.videoId}`,
                                 title: card.title,
                                 type: videoType,
-                                uploadDateText: normalizeDate(card.dateText),
+                                uploadDateText: normalizedDate,
                                 viewCount,
                                 durationText: card.durationText,
                                 thumbnailUrl: card.thumbnailUrl || `https://i.ytimg.com/vi/${card.videoId}/hqdefault.jpg`,
@@ -234,7 +259,7 @@ export class YouTubeScraper {
                             });
                             pushed++;
                         }
-                        if (videos.length < maxItems && videos.length >= 20) {
+                        if (!hitDateLimit && videos.length < maxItems && videos.length >= 20) {
                             log.info(`[${channelName}] Requires more than ${videos.length} items. Queuing for deep scroll...`);
                             tabsNeedingScroll.push(request.userData);
                         }
@@ -342,6 +367,11 @@ export class YouTubeScraper {
                         const viewCount = parseCount(card.viewsText);
                         if (options.minViews && viewCount < options.minViews)
                             continue;
+                        const normalizedDate = normalizeDate(card.dateText);
+                        if (options.maxDaysOld && options.maxDaysOld > 0 && isOlderThanDays(normalizedDate, options.maxDaysOld)) {
+                            log.info(`[${channelName}] Video is older than ${options.maxDaysOld} days (${normalizedDate}). Stopping deep scroll extraction.`);
+                            break;
+                        }
                         collectedVideos.push({
                             channelName,
                             channelUrl,
@@ -349,7 +379,7 @@ export class YouTubeScraper {
                             videoUrl: `https://www.youtube.com/watch?v=${card.videoId}`,
                             title: card.title,
                             type: videoType,
-                            uploadDateText: normalizeDate(card.dateText),
+                            uploadDateText: normalizedDate,
                             viewCount,
                             durationText: card.durationText,
                             thumbnailUrl: card.thumbnailUrl,
