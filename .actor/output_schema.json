@@ -1,0 +1,24 @@
+{
+  "title": "Output",
+  "description": "Links to the dataset and OUTPUT record.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "dataset": {
+      "title": "Dataset",
+      "type": "string",
+      "description": "Dataset containing scraped video items.",
+      "format": "dataset"
+    },
+    "output": {
+      "title": "Key-Value Store OUTPUT",
+      "type": "string",
+      "description": "Key-value store OUTPUT record.",
+      "format": "keyValueStoreRecord",
+      "default": {
+        "storeId": "default",
+        "recordKey": "OUTPUT"
+      }
+    }
+  }
+}

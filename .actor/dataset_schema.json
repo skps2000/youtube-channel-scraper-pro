@@ -1,0 +1,106 @@
+{
+  "title": "YouTube Channel Scraper Pro Dataset",
+  "description": "Each item represents a scraped YouTube video.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "channelName": {
+      "title": "Channel Name",
+      "type": "string",
+      "description": "Official channel display name."
+    },
+    "channelUrl": {
+      "title": "Channel URL",
+      "type": "string",
+      "description": "Input channel URL.",
+      "format": "uri"
+    },
+    "videoId": {
+      "title": "Video ID",
+      "type": "string",
+      "description": "YouTube video ID."
+    },
+    "videoUrl": {
+      "title": "Video URL",
+      "type": "string",
+      "description": "Full youtube.com/watch?v=... URL.",
+      "format": "uri"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string",
+      "description": "Video title."
+    },
+    "type": {
+      "title": "Video Type",
+      "type": "string",
+      "description": "LONG_FORM or SHORTS."
+    },
+    "uploadDateText": {
+      "title": "Upload Date",
+      "type": "string",
+      "description": "Relative upload date (e.g., 8 days ago)."
+    },
+    "viewCount": {
+      "title": "View Count",
+      "type": "integer",
+      "description": "Parsed integer view count."
+    },
+    "durationText": {
+      "title": "Duration",
+      "type": "string",
+      "description": "Video duration string (e.g., 12:59)."
+    },
+    "thumbnailUrl": {
+      "title": "Thumbnail URL",
+      "type": "string",
+      "description": "Highest-quality static thumbnail URL.",
+      "format": "uri"
+    },
+    "animatedThumbnailUrl": {
+      "title": "Animated Thumbnail URL",
+      "type": "string",
+      "description": "3-second animated WebP preview URL.",
+      "format": "uri"
+    },
+    "likeCount": {
+      "title": "Like Count",
+      "type": "integer",
+      "description": "Like count, present only when fetchLikes is true."
+    }
+  },
+  "views": {
+    "overview": {
+      "title": "Overview",
+      "transformation": {
+        "fields": [
+          "channelName",
+          "channelUrl",
+          "title",
+          "videoUrl",
+          "type",
+          "uploadDateText",
+          "viewCount",
+          "durationText",
+          "likeCount"
+        ]
+      },
+      "display": {
+        "component": "table",
+        "properties": {
+          "columns": [
+            { "label": "Channel", "field": "channelName" },
+            { "label": "Channel URL", "field": "channelUrl", "format": "link" },
+            { "label": "Title", "field": "title" },
+            { "label": "Video URL", "field": "videoUrl", "format": "link" },
+            { "label": "Type", "field": "type" },
+            { "label": "Uploaded", "field": "uploadDateText" },
+            { "label": "Views", "field": "viewCount" },
+            { "label": "Duration", "field": "durationText" },
+            { "label": "Likes", "field": "likeCount" }
+          ]
+        }
+      }
+    }
+  }
+}

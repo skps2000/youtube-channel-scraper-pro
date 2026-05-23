@@ -1,0 +1,15 @@
+{
+  "actorSpecification": 1,
+  "name": "youtube-channel-scraper-pro",
+  "title": "YouTube Channel Scraper Pro",
+  "description": "Scrape YouTube channel videos with advanced filtering.",
+  "version": "0.0.1",
+  "buildTag": "latest",
+  "env": null,
+  "dockerfile": "./Dockerfile",
+  "input": "./INPUT_SCHEMA.json",
+  "output": "./output_schema.json",
+  "storages": {
+    "dataset": "./dataset_schema.json"
+  }
+}
