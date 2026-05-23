@@ -1,4 +1,5 @@
 {
+  "actorOutputSchemaVersion": 1,
   "title": "Output",
   "description": "Links to the dataset and OUTPUT record.",
   "type": "object",
