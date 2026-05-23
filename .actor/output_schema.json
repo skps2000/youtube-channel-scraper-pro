@@ -9,7 +9,6 @@
       "title": "Dataset",
       "type": "string",
       "description": "Dataset containing scraped video items.",
-      "format": "dataset",
       "template": "dataset"
     },
     "output": {
